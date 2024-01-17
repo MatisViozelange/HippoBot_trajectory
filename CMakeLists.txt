@@ -15,7 +15,11 @@ find_package(nav_msgs REQUIRED)
 include_directories(include)
 
 # Executables
-add_executable(path_planner_cell_node src/path_planner_cell_node.cpp include/astar_path_planner/a_star.h)
+set(HEADER_FILES
+include/astar_path_planner/a_star.h
+include/astar_path_planner/point.h
+)
+add_executable(path_planner_cell_node src/path_planner_cell_node.cpp ${HEADER_FILES})
 ament_target_dependencies(path_planner_cell_node rclcpp geometry_msgs nav_msgs)
 target_include_directories(path_planner_cell_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

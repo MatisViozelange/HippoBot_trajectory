@@ -10,7 +10,6 @@
 #include <fstream>
 #include <chrono>
 #include <memory>
-#include <math.h>
 
 
 namespace ecn
@@ -62,6 +61,8 @@ public:
     path.push_back(*start);
     // list from start to end
     std::reverse(path.begin(),path.end());
+    for(size_t i = 1; i < path.size(); ++i)
+      path[i-1].print(path[i]);
 
     std::cout << "solved in " << path.size()-1 << " steps, distance is " << dist << std::endl;
 
@@ -134,6 +135,8 @@ std::vector<Node> Astar(Node start, Node goal)
   // keep track of who comes from who
   Tree<Node> tree;
 
+  if(show)
+    start.start();
 
   int evaluated = 0, created = 0, shortcut = 0;
   evaluated++;
@@ -157,6 +160,8 @@ std::vector<Node> Astar(Node start, Node goal)
     if(show)
     {
       Node* parent = tree[best.node];
+      if(parent)
+        best.node->show(true, *parent);
     }
 
     auto children = best.node->children();
@@ -178,6 +183,8 @@ std::vector<Node> Astar(Node start, Node goal)
                       child_g});
           evaluated++;
           tree.insert(child, best.node);
+          if(show)
+            child_ptr->show(false, *best.node);
         }
         else if(twin->g > child_g)
         {
@@ -196,7 +203,6 @@ std::vector<Node> Astar(Node start, Node goal)
                shortcut << " shortcuts found" << std::endl;
   return {};
 }
-
 
 }
 
