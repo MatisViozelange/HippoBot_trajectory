@@ -4,6 +4,7 @@
 #include <vector>
 #include <memory>
 #include <numeric>
+#include <cmath>
 #include <iostream>
 #include <algorithm>
 #include <nav_msgs/msg/occupancy_grid.hpp>
@@ -17,9 +18,26 @@ public :
     typedef std::vector<Ptr> Vector;
 
 
-    bool is(const Point &goal) const
+    bool operator==(const Point& other) const {
+        return x_ == other.x_ && y_ == other.y_;
+    }
+
+
+    // prints the grid with all positions from parent
+    virtual void print(const Point &parent) const
     {
-        return x_ == goal.x_ && y_ == goal.y_;
+        std::cout << "Point(" << x_ << ", " << y_ << ") from Parent(" << parent.x_ << ", " << parent.y_ << ")\n";
+    }
+
+    void start()
+    {
+        std::cout<<"start"<<std::endl;
+    }
+
+    virtual void show(bool closed, const Point &parent)
+    {
+        std::string state = closed ? "Closed" : "Open";
+        std::cout << "Point(" << x_ << ", " << y_ << ") is " << state << " from Parent(" << parent.x_ << ", " << parent.y_ << ")\n";
     }
 
 
@@ -76,12 +94,18 @@ public :
         return is_Valid;
     }
 
-    int h(const Point &goal) {
+    double h(const Point &goal,const bool& use_Manhattan) {
         // Manhattan distance
+        if(use_Manhattan)
+        {
         return std::abs(x_ - goal.x_) + std::abs(y_ - goal.y_);
+        }
 
         // Or Euclidean distance
-        // return std::sqrt((x - goal.x) * (x - goal.x) + (y - goal.y) * (y - goal.y));
+        else
+        {
+        return std::sqrt((x_ - goal.x_) * (x_ - goal.x_) + (y_ - goal.y_) * (y_ - goal.y_));
+        }
     }
 
 

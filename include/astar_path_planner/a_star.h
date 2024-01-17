@@ -143,7 +143,6 @@ std::vector<Node> Astar(Node start, Node goal)
   while(!queue.empty())
   {
     auto best = queue.top();
-
     if(areSame(best.node,goal))
     {
       std::cout << created << " nodes created, " <<
@@ -151,7 +150,6 @@ std::vector<Node> Astar(Node start, Node goal)
                    shortcut << " shortcuts found" << std::endl;
       std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>
                    (std::chrono::system_clock::now()-t0).count() << " ms" << std::endl;
-
       return tree.fullPathTo(best.node, best.g);
     }
 

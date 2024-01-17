@@ -28,6 +28,7 @@ public:
         // Log that the node has succesfully started
         RCLCPP_INFO(this->get_logger(), "path planner cell has successfully started");
 
+
         // Create a subscrber that get information to update the Map
         map_sub = create_subscription<nav_msgs::msg::OccupancyGrid>("mapping", 10,std::bind(&path_planner_cell_node::updateMap, this, std::placeholders::_1));
 
@@ -75,18 +76,25 @@ public:
 
     void timer_callback()
     {
-        point_Path = Astar(my_position,target_position);
-        path_size = point_Path.size();
-        Path.poses.resize(path_size);
-        for(int index=0;index<path_size;index++)
-        {
-            //On prend la valeur du point x et en y à l'indice index du point_Path pour le stocker dans le Path que l'on envoie
-            Path.poses[index].pose.position.set__x(point_Path[index].x_);
-            Path.poses[index].pose.position.set__y((point_Path[index].y_));
-            Path.poses[index].pose.position.set__z(point_Path[index].map_.data[point_Path[index].y_*point_Path[index].map_.info.width+point_Path[index].x_]);
-            Path.poses[index].pose.set__orientation(pointZero.orientation);//utile de mettre les orientations à 0 à chaque fois?
-        }
-        path_pub->publish(Path);
+            point_Path = Astar(my_position,target_position);
+            if(not(point_Path.empty()))
+            {
+
+                path_size = point_Path.size();
+                Path.poses.resize(path_size);
+                cout<<"timer_called"<<endl;
+                for(int index=0;index<path_size;index++)
+                {
+                    //On prend la valeur du point x et en y à l'indice index du point_Path pour le stocker dans le Path que l'on envoie
+                    Path.poses[index].pose.position.set__x(point_Path[index].x_);
+                    Path.poses[index].pose.position.set__y((point_Path[index].y_));
+                    Path.poses[index].pose.position.set__z(point_Path[index].map_.data[point_Path[index].y_*point_Path[index].map_.info.width+point_Path[index].x_]);
+                    Path.poses[index].pose.set__orientation(pointZero.orientation);//utile de mettre les orientations à 0 à chaque fois?
+
+                    cout<<"Path changed "<<index<<" times"<<endl;
+                }
+                path_pub->publish(Path);
+            }
 
     }
 
@@ -120,3 +128,5 @@ int main(int argc, char ** argv)
     rclcpp::shutdown();
     return 0;
 }
+
+
