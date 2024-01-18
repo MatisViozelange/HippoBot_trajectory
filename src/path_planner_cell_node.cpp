@@ -50,39 +50,51 @@ public:
         pointZero.orientation.set__y(0);
         pointZero.orientation.set__z(0);
 
-        //On lie la map aux nodes de position pour le Astar
-        my_position.map_ = map;
-        target_position.map_ = map;
+        //Pour voir la map dans Rviz
+        set_parameter(rclcpp::Parameter("use_sim_time",true));
+        map.header.frame_id = "map";
+        Path.header.frame_id = "map";
+
 
     };
 
 
     void updateMap(const nav_msgs::msg::OccupancyGrid &NewMap)
     {
-        map = NewMap;
+        map.data = NewMap.data;
+        map.info = NewMap.info;
+        map_init = true;
+        if(map_init && targ_init && my_posinit) initialisation_done = true;
     }
+
 
     void positionCallback(const geometry_msgs::msg::Pose &msg)
     {
         my_position.x_ = msg.position.x;
         my_position.y_ = msg.position.y;
+        my_posinit = true;
+        if(map_init && targ_init && my_posinit) initialisation_done = true;
     }
 
     void targetCallback(const geometry_msgs::msg::Pose &msg)
     {
         target_position.x_ = msg.position.x;
         target_position.y_ = msg.position.y;
+        targ_init = true;
+        if(map_init && targ_init && my_posinit) initialisation_done = true;
     }
 
     void timer_callback()
     {
+        if(initialisation_done)
+        {
+            my_position.map_ = map;
+            target_position.map_ = map;
             point_Path = Astar(my_position,target_position);
-            if(not(point_Path.empty()))
+            path_size = point_Path.size();
+            if(path_size>0)
             {
-
-                path_size = point_Path.size();
                 Path.poses.resize(path_size);
-                cout<<"timer_called"<<endl;
                 for(int index=0;index<path_size;index++)
                 {
                     //On prend la valeur du point x et en y à l'indice index du point_Path pour le stocker dans le Path que l'on envoie
@@ -95,6 +107,7 @@ public:
                 }
                 path_pub->publish(Path);
             }
+        }
 
     }
 
@@ -115,6 +128,10 @@ public:
     Point my_position;
     Point target_position;
     geometry_msgs::msg::Pose pointZero;
+    bool initialisation_done=false;
+    bool map_init=false;
+    bool targ_init=false;
+    bool my_posinit=false;
 
 
 
@@ -128,5 +145,4 @@ int main(int argc, char ** argv)
     rclcpp::shutdown();
     return 0;
 }
-
 

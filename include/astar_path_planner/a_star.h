@@ -61,8 +61,6 @@ public:
     path.push_back(*start);
     // list from start to end
     std::reverse(path.begin(),path.end());
-    for(size_t i = 1; i < path.size(); ++i)
-      path[i-1].print(path[i]);
 
     std::cout << "solved in " << path.size()-1 << " steps, distance is " << dist << std::endl;
 
@@ -110,96 +108,73 @@ public:
 template<class Node>
 std::vector<Node> Astar(Node start, Node goal)
 {
-  // check if we should display during A*
-  std::ifstream config("../config.txt", std::ios::in);
-  std::string keyword;
-  bool show = false, use_manhattan = true;
-  while(config >> keyword)
-  {
-    if(keyword == "show")
-      config >> show;
-    else if(keyword == "use_manhattan")
-      config >> use_manhattan;
-    else
+
+    bool use_manhattan = true;
+    auto t0 = std::chrono::system_clock::now();
+
+    Queue<Node> queue;
+    queue.push({&start, start.h(goal, use_manhattan), 0});
+
+    // keep track of who comes from who
+    Tree<Node> tree;
+
+
+    int evaluated = 0, created = 0, shortcut = 0;
+    evaluated++;
+    while(!queue.empty())
     {
-      std::string dummy;
-      config >> dummy;
-    }
-  }
+        auto best = queue.top();
+        best.node->map_ = start.map_;
 
-  auto t0 = std::chrono::system_clock::now();
-
-  Queue<Node> queue;
-  queue.push({&start, start.h(goal, use_manhattan), 0});
-
-  // keep track of who comes from who
-  Tree<Node> tree;
-
-  if(show)
-    start.start();
-
-  int evaluated = 0, created = 0, shortcut = 0;
-  evaluated++;
-  while(!queue.empty())
-  {
-    auto best = queue.top();
-    if(areSame(best.node,goal))
-    {
-      std::cout << created << " nodes created, " <<
-                   evaluated << " evaluated, " <<
-                   shortcut << " shortcuts found" << std::endl;
-      std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>
-                   (std::chrono::system_clock::now()-t0).count() << " ms" << std::endl;
-      return tree.fullPathTo(best.node, best.g);
-    }
-
-    tree.close(best.node);
-    queue.pop();
-    if(show)
-    {
-      Node* parent = tree[best.node];
-      if(parent)
-        best.node->show(true, *parent);
-    }
-
-    auto children = best.node->children();
-    created += children.size();
-
-    // to avoid equal costs leading to favorite directions
-    std::random_shuffle(children.begin(), children.end());
-
-    for(auto &child: children)
-    {
-      // ensure we have not been here
-      if(auto child_ptr(child.get()); !tree.isVisited(child_ptr))
-      {
-        const auto child_g = best.g + child_ptr->distToParent();
-        if(const auto twin = queue.find(*child_ptr); !twin)
+        if(areSame(best.node,goal))
         {
-          queue.push({child_ptr,
-                      child_ptr->h(goal, use_manhattan) + child_g,
-                      child_g});
-          evaluated++;
-          tree.insert(child, best.node);
-          if(show)
-            child_ptr->show(false, *best.node);
+          std::cout << created << " nodes created, " <<
+                       evaluated << " evaluated, " <<
+                       shortcut << " shortcuts found" << std::endl;
+          std::cout << "Time: " << std::chrono::duration_cast<std::chrono::milliseconds>
+                       (std::chrono::system_clock::now()-t0).count() << " ms" << std::endl;
+          return tree.fullPathTo(best.node, best.g);
         }
-        else if(twin->g > child_g)
-        {
-          tree[twin->node] = best.node;
-          queue.push({twin->node, twin->f - twin->g + child_g, child_g});
-          shortcut++;
-        }
-      }
-    }
-  }
 
-  // while loop exit means no solutions
-  std::cout << "No solutions " << std::endl;
-  std::cout << created << " nodes created, " <<
+        tree.close(best.node);
+        queue.pop();
+
+        auto children = best.node->children();
+        created += children.size();
+
+        // to avoid equal costs leading to favorite directions
+        std::random_shuffle(children.begin(), children.end());
+
+        for(auto &child: children)
+        {
+            // ensure we have not been here
+            if(auto child_ptr(child.get()); !tree.isVisited(child_ptr))
+            {
+                const auto child_g = best.g + child_ptr->distToParent();
+                if(const auto twin = queue.find(*child_ptr); !twin)
+                {
+                    queue.push({child_ptr,
+                              child_ptr->h(goal, use_manhattan) + child_g,
+                              child_g});
+                    evaluated++;
+                    tree.insert(child, best.node);
+                }
+                else if(twin->g > child_g)
+                {
+                    tree[twin->node] = best.node;
+                    queue.push({twin->node, twin->f - twin->g + child_g, child_g});
+                    shortcut++;
+                }
+            }
+        }
+    }
+
+    // while loop exit means no solutions
+    std::cout << "No solutions " << std::endl;
+    std::cout << created << " nodes created, " <<
                evaluated << " evaluated, " <<
                shortcut << " shortcuts found" << std::endl;
-  return {};
+    return {};
 }
 
 }

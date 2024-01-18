@@ -141,3 +141,34 @@ int main(int argc, char ** argv)
     return 0;
 }
 
+
+
+
+
+
+
+
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+Pour le Point.h 
+
+
+
+    // prints the grid with all positions from parent
+    virtual void print(const Point &parent) const
+    {
+        std::cout << "Point(" << x_ << ", " << y_ << ") from Parent(" << parent.x_ << ", " << parent.y_ << ")\n";
+    }
+
+    void start()
+    {
+        std::cout<<"start"<<std::endl;
+    }
+
+    virtual void show(bool closed, const Point &parent)
+    {
+        std::string state = closed ? "Closed" : "Open";
+        std::cout << "Point(" << x_ << ", " << y_ << ") is " << state << " from Parent(" << parent.x_ << ", " << parent.y_ << ")\n";
+    }
+

@@ -23,24 +23,6 @@ public :
     }
 
 
-    // prints the grid with all positions from parent
-    virtual void print(const Point &parent) const
-    {
-        std::cout << "Point(" << x_ << ", " << y_ << ") from Parent(" << parent.x_ << ", " << parent.y_ << ")\n";
-    }
-
-    void start()
-    {
-        std::cout<<"start"<<std::endl;
-    }
-
-    virtual void show(bool closed, const Point &parent)
-    {
-        std::string state = closed ? "Closed" : "Open";
-        std::cout << "Point(" << x_ << ", " << y_ << ") is " << state << " from Parent(" << parent.x_ << ", " << parent.y_ << ")\n";
-    }
-
-
 
     Vector children()
     {
@@ -53,6 +35,7 @@ public :
             {
                 if(dx == 0 && dy == 0) continue; // Skip the current point
                 Point child;
+                child.map_ = map_;
                 child.x_ = x_ + dx;
                 child.y_ = y_ + dy;
                 if(isValid(child)) { // isValid should check if the point is within grid bounds and not an obstacle
@@ -63,34 +46,36 @@ public :
         return children;
     }
 
-    bool isValid(const Point& candidate)
+    bool isValid(const Point candidate)
     {
         //We get the informations of the map
-        auto width = map_.info.width;
-        auto height = map_.info.height;
-        auto occupancy_grid = map_.data;
+        auto width = candidate.map_.info.width;
+        auto height = candidate.map_.info.height;
+        auto occupancy_grid = candidate.map_.data;
         //storing of the frame origin
-        auto Ox = map_.info.origin.position.x;
-        auto Oy = map_.info.origin.position.y;
+        auto Ox = candidate.map_.info.origin.position.x;
+        auto Oy = candidate.map_.info.origin.position.y;
 
         bool is_Valid = true;
 
         //we check if the candidate is out of the map
-        if(not(candidate.x_>Ox-width/2 && candidate.x_<Ox+width/2))
+        if(not(candidate.x_>=-Ox && candidate.x_<=width-Ox))
         {
             is_Valid = false;
         }
-        if(not(candidate.y_>Oy-height/2 && candidate.y_<Oy+height/2))
+        if(not(candidate.y_>=-Oy && candidate.y_<=height-Oy))
         {
             is_Valid = false;
         }
 
         //we check if the candidate is occuped
-        if(occupancy_grid[candidate.y_*width+candidate.x_]>0.5)
+        if(is_Valid)
         {
-            is_Valid = false;
+            if(occupancy_grid[candidate.y_*width+candidate.x_]>0.5)
+            {
+                is_Valid = false;
+            }
         }
-
         return is_Valid;
     }
 
